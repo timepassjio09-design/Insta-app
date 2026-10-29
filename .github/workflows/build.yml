@@ -1,42 +1,27 @@
 name: Build APK
-on: [push]
+on:
+  push:
+    branches: [ main ]
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-
+          python-version: '3.9'
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Buildozer
+      - name: Install Deps
         run: |
           sudo apt update
-          sudo apt install -y python3-pip zip unzip libltdl-dev libffi-dev libssl-dev zlib1g-dev libbz2-dev
+          sudo apt install -y python3-pip python3-setuptools python3-venv libltdl-dev libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libncurses5-dev libgdbm-dev libnss3-dev libgl1-mesa-dev libgles2-mesa-dev libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good
           pip install --upgrade pip
-          pip install https://github.com/kivy/buildozer/archive/master.zip
-          pip install cython==0.29.33
-
-      - name: Fix sdkmanager bug
-        run: |
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
-          echo '#!/bin/bash' > $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          echo 'exec $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "$@"' >> $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          chmod +x $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
+          pip install buildozer==1.5.0 cython==0.29.33 virtualenv
       - name: Build APK
         run: buildozer android debug
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
