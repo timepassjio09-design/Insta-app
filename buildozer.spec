@@ -21,4 +21,3 @@ android.build_tools_version = 33.0.1
 android.accept_sdk_license_agreements = True
 android.permissions = INTERNET
 p4a.branch = develop
-p4a.fork = kivy
