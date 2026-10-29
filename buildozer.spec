@@ -5,8 +5,9 @@ package.domain = org.test.insta
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
-requirements = python3,kivy==2.3.0
+requirements = python3,kivy==2.1.0
 orientation = portrait
+fullscreen = 0
 
 [buildozer]
 log_level = 2
@@ -16,8 +17,4 @@ warn_on_root = 0
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
-android.sdk = 33
-android.build_tools_version = 33.0.1
 android.accept_sdk_license_agreements = True
-p4a.branch = develop
-p4a.fork = kivy
