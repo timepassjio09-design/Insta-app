@@ -1,132 +1,75 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
+from kivy.uix.spinner import Spinner
 from kivy.uix.switch import Switch
-from kivy.storage.jsonstore import JsonStore
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.gridlayout import GridLayout
 
-store = JsonStore('ids.json')
-
-class MainLayout(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', padding=10, spacing=10, **kwargs)
-        
-        self.add_widget(Label(text='INSTA-APP : ID Group Manager', size_hint_y=None, height=50, bold=True, font_size=22))
+class InstaManagerApp(App):
+    def build(self):
+        self.ids_list = []
+        self.groups = {}
+        self.master_id = None
+        self.auto_post = False
+        self.auto_follow = False
+        root = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        root.add_widget(Label(text='Insta Manager - Master Control', font_size=20, size_hint_y=0.1))
         
         # Add ID
-        add_box = BoxLayout(size_hint_y=None, height=50, spacing=5)
-        self.id_input = TextInput(hint_text='New ID likho jaise Raja123')
-        add_btn = Button(text='Add ID', size_hint_x=0.3)
-        add_btn.bind(on_press=self.add_id)
-        add_box.add_widget(self.id_input)
-        add_box.add_widget(add_btn)
-        self.add_widget(add_box)
-        
-        # Master ID
-        master_box = BoxLayout(size_hint_y=None, height=40, spacing=5)
-        master_box.add_widget(Label(text='Master ID:'))
-        self.master_label = Label(text='Koi ID nahi', bold=True)
-        master_box.add_widget(self.master_label)
-        self.add_widget(master_box)
-        
-        # Switches - Tera wala feature
-        switch_box1 = BoxLayout(size_hint_y=None, height=40)
-        switch_box1.add_widget(Label(text='Auto Post: 1 ID se = Sab pe'))
-        self.auto_post_switch = Switch(active=True)
-        switch_box1.add_widget(self.auto_post_switch)
-        self.add_widget(switch_box1)
-        
-        switch_box2 = BoxLayout(size_hint_y=None, height=40)
-        switch_box2.add_widget(Label(text='Auto Follow: 1 se = Sab se'))
-        self.auto_follow_switch = Switch(active=True)
-        switch_box2.add_widget(self.auto_follow_switch)
-        self.add_widget(switch_box2)
+        b1 = BoxLayout(size_hint_y=0.1)
+        self.id_input = TextInput(hint_text='Enter ID')
+        btn1 = Button(text='Add ID', size_hint_x=0.3)
+        btn1.bind(on_press=self.add_id)
+        b1.add_widget(self.id_input); b1.add_widget(btn1)
+        root.add_widget(b1)
         
         # Group
-        group_box = BoxLayout(size_hint_y=None, height=40, spacing=5)
-        self.group_input = TextInput(hint_text='Group Name jaise Mera Group')
-        group_btn = Button(text='Create Group', size_hint_x=0.3)
-        group_btn.bind(on_press=self.create_group)
-        group_box.add_widget(self.group_input)
-        group_box.add_widget(group_btn)
-        self.add_widget(group_box)
+        b2 = BoxLayout(size_hint_y=0.1)
+        self.group_input = TextInput(hint_text='Group Name')
+        btn2 = Button(text='Create Group', size_hint_x=0.4)
+        btn2.bind(on_press=self.create_group)
+        b2.add_widget(self.group_input); b2.add_widget(btn2)
+        root.add_widget(b2)
         
-        # IDs List
-        self.add_widget(Label(text='Tumhari IDs:', size_hint_y=None, height=30))
-        self.scroll = ScrollView()
-        self.list_layout = BoxLayout(orientation='vertical', size_hint_y=None, spacing=5)
-        self.list_layout.bind(minimum_height=self.list_layout.setter('height'))
-        self.scroll.add_widget(self.list_layout)
-        self.add_widget(self.scroll)
+        # Master
+        b3 = BoxLayout(size_hint_y=0.1)
+        b3.add_widget(Label(text='Master:'))
+        self.spinner = Spinner(text='Select Master', values=[])
+        self.spinner.bind(text=self.set_master)
+        b3.add_widget(self.spinner)
+        root.add_widget(b3)
         
-        # Post
-        post_box = BoxLayout(size_hint_y=None, height=50, spacing=5)
-        self.post_input = TextInput(hint_text='Master se kya post karna hai?')
-        post_btn = Button(text='POST', size_hint_x=0.3, background_color=(0,0.6,1,1))
-        post_btn.bind(on_press=self.make_post)
-        post_box.add_widget(self.post_input)
-        post_box.add_widget(post_btn)
-        self.add_widget(post_box)
+        # Switches
+        g = GridLayout(cols=2, size_hint_y=0.2)
+        g.add_widget(Label(text='Auto Post ON/OFF')); self.s1 = Switch(); self.s1.bind(active=self.set_post); g.add_widget(self.s1)
+        g.add_widget(Label(text='Auto Follow ON/OFF')); self.s2 = Switch(); self.s2.bind(active=self.set_follow); g.add_widget(self.s2)
+        root.add_widget(g)
         
-        self.status = Label(text='Status: Ready - Kitni bhi ID add kar sakte ho', size_hint_y=None, height=30)
-        self.add_widget(self.status)
-        self.refresh_list()
+        self.lbl = Label(text='IDs: 0\\nMaster: None\\nAuto Post OFF\\nAuto Follow OFF')
+        sv = ScrollView(); sv.add_widget(self.lbl); root.add_widget(sv)
+        
+        b4 = BoxLayout(size_hint_y=0.1)
+        b4.add_widget(Button(text='Post with Master', on_press=self.do_post))
+        b4.add_widget(Button(text='Follow with Master', on_press=self.do_follow))
+        root.add_widget(b4)
+        return root
     
-    def add_id(self, instance):
-        new_id = self.id_input.text.strip()
-        if not new_id: return
-        ids = store.get('data')['ids'] if store.exists('data') else []
-        if new_id not in ids:
-            ids.append(new_id)
-            master = store.get('data').get('master', ids[0]) if store.exists('data') else ids[0]
-            store.put('data', ids=ids, master=master)
-        self.id_input.text = ''
-        self.refresh_list()
-    
-    def create_group(self, instance):
-        gname = self.group_input.text.strip()
-        if gname:
-            store.put('group', name=gname)
-            self.status.text = f'Group Created: {gname}'
-            self.group_input.text = ''
-    
-    def set_master(self, id_name):
-        data = store.get('data')
-        store.put('data', ids=data['ids'], master=id_name)
-        self.refresh_list()
-    
-    def refresh_list(self):
-        self.list_layout.clear_widgets()
-        if not store.exists('data'): return
-        data = store.get('data')
-        ids = data.get('ids', [])
-        master = data.get('master', ids[0] if ids else '')
-        self.master_label.text = master
-        for i in ids:
-            row = BoxLayout(size_hint_y=None, height=45, spacing=5)
-            is_master = ' [MASTER]' if i==master else ''
-            row.add_widget(Label(text=f'{i}{is_master}', size_hint_x=0.6))
-            btn = Button(text='Master Banao', size_hint_x=0.4)
-            btn.bind(on_press=lambda x, id_name=i: self.set_master(id_name))
-            row.add_widget(btn)
-            self.list_layout.add_widget(row)
-    
-    def make_post(self, instance):
-        text = self.post_input.text.strip()
-        if not text or not store.exists('data'): return
-        data = store.get('data')
-        ids = data.get('ids', [])
-        master = data.get('master', ids[0])
-        if self.auto_post_switch.active:
-            self.status.text = f'POSTED by {master} -> {len(ids)} IDs pe gaya!'
-        else:
-            self.status.text = f'POSTED only by {master}'
-        self.post_input.text = ''
+    def add_id(self, _): 
+        v=self.id_input.text.strip()
+        if v and v not in self.ids_list: self.ids_list.append(v); self.id_input.text=''; self.refresh()
+    def create_group(self, _):
+        v=self.group_input.text.strip()
+        if v: self.groups[v]=self.ids_list.copy(); self.group_input.text=''; self.refresh()
+    def set_master(self, sp, txt): self.master_id=txt; self.refresh()
+    def set_post(self, _, val): self.auto_post=val; self.refresh()
+    def set_follow(self, _, val): self.auto_follow=val; self.refresh()
+    def refresh(self):
+        self.spinner.values=self.ids_list
+        self.lbl.text=f"IDs: {len(self.ids_list)} {self.ids_list}\\nMaster: {self.master_id}\\nGroups: {list(self.groups.keys())}\\nAuto Post: {'ON - sab me jayegi' if self.auto_post else 'OFF - sirf master me'}\\nAuto Follow: {'ON - sab follow' if self.auto_follow else 'OFF - sirf master'}"
+    def do_post(self, _): self.lbl.text=f"{self.master_id} se post -> {'All IDs' if self.auto_post else 'Only Master'} me gayi"
+    def do_follow(self, _): self.lbl.text=f"{self.master_id} ne follow kiya -> {'All IDs' if self.auto_follow else 'Only Master'} ne follow kiya"
 
-class InstaApp(App):
-    def build(self):
-        return MainLayout()
-
-InstaApp().run()
+InstaManagerApp().run()
