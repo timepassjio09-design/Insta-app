@@ -18,7 +18,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
-      - name: Fix sdkmanager path
+      - name: Fix SDK and Licenses
         run: |
           mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
           cd /tmp
@@ -27,10 +27,11 @@ jobs:
           mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
           mv cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ || true
           mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
-          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          chmod +x ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager
+          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager || true
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          echo -e "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea4b324" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo -e "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea4b324\n33b6a2b64607f11b759f320ef9dff4ae5c08d2d0\n504667632a7103d9f9d2f2a977a1b0d2a8d0a9c" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "y" | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          echo "y" | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.1" "platforms;android-33" "platform-tools" || true
       - name: Build APK
         run: buildozer android debug
       - name: Upload APK
