@@ -1,35 +1,34 @@
 name: Build APK
-on: [push]
-
+on:
+  push:
+    branches: [ main ]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y openjdk-17-jdk zip unzip libffi-dev libssl-dev libbz2-dev
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk zip unzip
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
-
       - name: Accept Android Licenses
         run: |
-          yes | sdkmanager --licenses || true
-
+          mkdir -p $HOME/.android
+          touch $HOME/.android/repositories.cfg
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b3e" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
       - name: Build APK
         run: |
           buildozer android debug
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Insta-App-APK
+          name: apk
           path: bin/*.apk
