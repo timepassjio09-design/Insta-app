@@ -1,23 +1,35 @@
 name: Build APK
 on: [push]
+
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
+
       - name: Install dependencies
         run: |
+          sudo apt update
+          sudo apt install -y openjdk-17-jdk zip unzip libffi-dev libssl-dev libbz2-dev
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
-          sudo apt update
-          sudo apt install -y openjdk-17-jdk zip unzip
-      - name: Build
+
+      - name: Accept Android Licenses
         run: |
-          buildozer -v android debug
-      - uses: actions/upload-artifact@v4
+          yes | sdkmanager --licenses || true
+
+      - name: Build APK
+        run: |
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: apk
+          name: Insta-App-APK
           path: bin/*.apk
