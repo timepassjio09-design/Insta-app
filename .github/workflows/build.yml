@@ -4,34 +4,22 @@ on:
     branches: [ main ]
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - uses: actions/setup-java@v4
+          python-version: '3.9'
+      - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Install Buildozer
+      - name: Install Deps
         run: |
+          sudo apt update
+          sudo apt install -y python3-pip python3-setuptools python3-venv libltdl-dev libffi-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libncurses5-dev libgdbm-dev libnss3-dev libgl1-mesa-dev libgles2-mesa-dev libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good
           pip install --upgrade pip
-          pip install buildozer cython==0.29.33
-      - name: Fix SDK and Licenses
-        run: |
-          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
-          cd /tmp
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q commandlinetools-linux-11076708_latest.zip
-          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-          mv cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ || true
-          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
-          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager || true
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          echo -e "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea4b324\n33b6a2b64607f11b759f320ef9dff4ae5c08d2d0\n504667632a7103d9f9d2f2a977a1b0d2a8d0a9c" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "y" | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          echo "y" | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.1" "platforms;android-33" "platform-tools" || true
+          pip install buildozer==1.5.0 cython==0.29.33 virtualenv
       - name: Build APK
         run: buildozer android debug
       - name: Upload APK
