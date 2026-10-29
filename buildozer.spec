@@ -1,7 +1,7 @@
 [app]
 title = Insta Manager
 package.name = instamanager
-package.domain = org.test
+package.domain = org.test.insta
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
@@ -19,5 +19,5 @@ android.ndk = 25b
 android.sdk = 33
 android.build_tools_version = 33.0.1
 android.accept_sdk_license_agreements = True
-android.permissions = INTERNET
 p4a.branch = develop
+p4a.fork = kivy
